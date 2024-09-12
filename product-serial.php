@@ -51,3 +51,23 @@ class Product_Serial {
 	}
 }
 new Product_Serial();
+if ( !class_exists( 'Product_Serial_Display' ) ) exit;
+class Product_Serial_Display {
+
+    public function __construct() {
+        // Dodanie niestandardowej wiadomości do podglądu zamówienia
+        add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'display_serial_number' ) );
+    }
+
+    // Funkcja wyświetlająca wiadomość
+    public function display_serial_number( $order ) {
+        // Możesz dodać tutaj dowolną wiadomość lub dynamiczne dane, np. metadane zamówienia
+        echo '<div class="custom-order-message">';
+        echo '<h3>' . __( 'Niestandardowa wiadomość', 'woocommerce' ) . '</h3>';
+        echo '<p>' . __( 'To jest niestandardowa wiadomość wyświetlana w szczegółach zamówienia.', 'woocommerce' ) . '</p>';
+        echo '</div>';
+    }
+}
+
+// Inicjalizacja klasy
+new Product_Serial_Display();
