@@ -18,7 +18,7 @@ class Product_Serial {
 	public function __construct() {
 		add_filter('woocommerce_product_data_tabs', array($this, 'product_data_tabs'));
 		add_filter( 'woocommerce_product_data_panels', array( $this, 'product_data_panel' ) );
-
+		add_action( 'woocommerce_admin_process_product_object', array( $this, 'product_data_save'), 10, 1 );
 	}
 	public function product_data_tabs($tabs) {
 		$tabs['serial'] = array(
@@ -47,7 +47,11 @@ class Product_Serial {
 
 
 		<?php
-
+	}
+	public function product_data_save( $product ) {
+		if ( isset( $_POST['_serial_number'] ) ) {        
+			$product->update_meta_data( '_serial_number', sanitize_text_field( $_POST['_serial_number'] ) );
+		}
 	}
 }
 new Product_Serial();
@@ -56,17 +60,27 @@ class Product_Serial_Display {
 
     public function __construct() {
         // Dodanie niestandardowej wiadomości do podglądu zamówienia
-        add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'display_serial_number' ) );
+		add_action('woocommerce_admin_order_item_headers', array( $this, 'my_woocommerce_admin_order_item_headers'));
+		add_action('woocommerce_admin_order_item_values', array( $this, 'my_woocommerce_admin_order_item_values'), 10, 3);
     }
+	// Add custom column headers here
+	public function my_woocommerce_admin_order_item_headers() {
+		// set the column name
+		$column_name = 'Test Column';
 
-    // Funkcja wyświetlająca wiadomość
-    public function display_serial_number( $order ) {
-        // Możesz dodać tutaj dowolną wiadomość lub dynamiczne dane, np. metadane zamówienia
-        echo '<div class="custom-order-message">';
-        echo '<h3>' . __( 'Niestandardowa wiadomość', 'woocommerce' ) . '</h3>';
-        echo '<p>' . __( 'To jest niestandardowa wiadomość wyświetlana w szczegółach zamówienia.', 'woocommerce' ) . '</p>';
-        echo '</div>';
-    }
+		// display the column name
+		echo '<th>' . $column_name . '</th>';
+	}
+
+	// Add custom column values here
+	public function my_woocommerce_admin_order_item_values($_product, $item, $item_id = null) {
+		// get the post meta value from the associated product
+		$serial_number = get_post_meta($_product->post->ID, '_serial_number', true);
+		//$serial_number = $item->get_meta('_serial_number');
+
+		// display the value
+		echo '<td>' . $serial_number . '</td>';
+	}
 }
 
 // Inicjalizacja klasy
