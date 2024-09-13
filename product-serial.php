@@ -75,6 +75,7 @@ class Product_Serial_Display {
 	// Add custom column values here
 	public function print_serial_number_column_value($_product, $item, $item_id = null) {
 		// get the post meta value from the associated product
+		if ( !($_product && is_a( $_product, 'WC_Product' ) ) ) return;
 		$serial_number = get_post_meta($_product->post->ID, '_serial_number', true);
 		//$serial_number = $item->get_meta('_serial_number');
 
