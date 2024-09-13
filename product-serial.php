@@ -12,6 +12,7 @@ if ( !defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once(__DIR__ . '/product-serial-display.php');
 if ( !class_exists( 'Product_Serial' ) ) exit;
 
 class Product_Serial {
@@ -19,6 +20,7 @@ class Product_Serial {
 		add_filter('woocommerce_product_data_tabs', array($this, 'product_data_tabs'));
 		add_filter( 'woocommerce_product_data_panels', array( $this, 'product_data_panel' ) );
 		add_action( 'woocommerce_admin_process_product_object', array( $this, 'product_data_save'), 10, 1 );
+		add_action('woocommerce_checkout_create_order_line_item', array( $this, 'save_serial_number_to_order_item' ), 10, 4);
 	}
 	public function product_data_tabs($tabs) {
 		$tabs['serial'] = array(
@@ -44,8 +46,6 @@ class Product_Serial {
 			);
 			?>
 		</div>
-
-
 		<?php
 	}
 	public function product_data_save( $product ) {
@@ -53,36 +53,12 @@ class Product_Serial {
 			$product->update_meta_data( '_serial_number', sanitize_text_field( $_POST['_serial_number'] ) );
 		}
 	}
+	public function save_serial_number_to_order_item( $item, $cart_item_key, $values, $order ) {
+		$serial_number = get_post_meta( $values['product_id'], '_serial_number', true );
+		if ( !empty( $serial_number ) ) {
+			$item->update_meta_data( '_serial_number', $serial_number );
+		}
+	}
 }
 new Product_Serial();
-if ( !class_exists( 'Product_Serial_Display' ) ) exit;
-class Product_Serial_Display {
-
-    public function __construct() {
-        // Dodanie niestandardowej wiadomości do podglądu zamówienia
-		add_action('woocommerce_admin_order_item_headers', array( $this, 'print_serial_number_column_name'));
-		add_action('woocommerce_admin_order_item_values', array( $this, 'print_serial_number_column_value'), 10, 3);
-    }
-	// Add custom column headers here
-	public function print_serial_number_column_name() {
-		// set the column name
-		$column_name = 'Numer seryjny';
-
-		// display the column name
-		echo '<th>' . $column_name . '</th>';
-	}
-
-	// Add custom column values here
-	public function print_serial_number_column_value($_product, $item, $item_id = null) {
-		// get the post meta value from the associated product
-		if ( !($_product && is_a( $_product, 'WC_Product' ) ) ) return;
-		$serial_number = get_post_meta($_product->post->ID, '_serial_number', true);
-		//$serial_number = $item->get_meta('_serial_number');
-
-		// display the value
-		echo '<td>' . $serial_number . '</td>';
-	}
-}
-
-// Inicjalizacja klasy
 new Product_Serial_Display();
