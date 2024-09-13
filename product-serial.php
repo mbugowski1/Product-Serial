@@ -36,10 +36,10 @@ class Product_Serial {
 				array(
 					'id' => '_serial_number',
 					'type' => 'text',
-					'placeholder' => 'Napisz cos',
+					'placeholder' => 'Numery seryjne',
 					'label' => 'Numer seryjny',
 					'desc_tip' => 'true',
-					'description' => 'Wprowadź numer seryjny produktu',
+					'description' => 'Wpisz numery seryjne oddzielone |',
 				)
 			);
 			?>
