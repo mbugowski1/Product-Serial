@@ -22,10 +22,7 @@ class Product_Serial_Display {
 		if ( !($_product && is_a( $_product, 'WC_Product' ) ) ) return;
 		//$serial_number = get_post_meta($_product->post->ID, '_serial_number', true);
 		$serial_number = $item->get_meta('_serial_number');
-
 		// display the value
 		echo '<td>' . $serial_number . '</td>';
 	}
 }
-
-// Inicjalizacja klasy

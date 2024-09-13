@@ -55,10 +55,33 @@ class Product_Serial {
 	}
 	public function save_serial_number_to_order_item( $item, $cart_item_key, $values, $order ) {
 		$serial_number = get_post_meta( $values['product_id'], '_serial_number', true );
+		$serials = str_replace(' ', '', $serial_number);
+		$serials = explode('|', $serials);
 		if ( !empty( $serial_number ) ) {
-			$item->update_meta_data( '_serial_number', $serial_number );
+			$item->update_meta_data( '_serial_number', $serials[0] );
 		}
+	}
+	private function occupied_serial_numbers() {
+		$args = array(
+			'post_type'  => 'shop_order',
+			'post_status' => 'wc-processing', // Status 'w trakcie realizacji'
+			'posts_per_page' => -1, // Pobierz wszystkie zamówienia
+		);
+		$query = new WP_Query($args);
+
+		$occupied = array();
+		if ($query->have_posts()) {
+			foreach ($query->posts as $order_post) {
+				$order = wc_get_order($order_post->ID);
+		
+				foreach ($order->get_items() as $item_id => $item) {
+					$used_serial_number = $item->get_meta('_serial_number');
+					$occupied[] = $used_serial_number;
+				}
+			}
+		}
+		return $occupied;
 	}
 }
 new Product_Serial();
-//new Product_Serial_Display();
+new Product_Serial_Display();
