@@ -66,7 +66,7 @@ class Product_Serial_Display {
 	// Add custom column headers here
 	public function my_woocommerce_admin_order_item_headers() {
 		// set the column name
-		$column_name = 'Test Column';
+		$column_name = 'Numer seryjny';
 
 		// display the column name
 		echo '<th>' . $column_name . '</th>';
