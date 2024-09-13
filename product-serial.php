@@ -54,11 +54,10 @@ class Product_Serial {
 		}
 	}
 	public function save_serial_number_to_order_item( $item, $cart_item_key, $values, $order ) {
-		$serial_number = get_post_meta( $values['product_id'], '_serial_number', true );
-		$serials = str_replace(' ', '', $serial_number);
-		$serials = explode('|', $serials);
+		$product_id = $values['product_id'];
+		$serial_number = get_post_meta($product_id, '_serial_number', true);
 		if ( !empty( $serial_number ) ) {
-			$item->update_meta_data( '_serial_number', $serials[0] );
+			$item->update_meta_data( '_serial_number', $this->available_serial_numbers($serial_number)[0] );
 		}
 	}
 	private function occupied_serial_numbers() {
@@ -82,6 +81,14 @@ class Product_Serial {
 		}
 		return $occupied;
 	}
+	private function available_serial_numbers($serial_number) {
+		$serials = str_replace(' ', '', $serial_number);
+		$serials = explode('|', $serials);
+		$occupied = $this->occupied_serial_numbers();
+		$available = array_diff($serials, $occupied);
+		$available = array_values($available);
+		return $available;
+	}
 }
 new Product_Serial();
-new Product_Serial_Display();
+//new Product_Serial_Display();
