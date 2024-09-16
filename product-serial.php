@@ -3,7 +3,7 @@
 * Plugin Name: Product Serial
 * Plugin URI: https://github.com/mbugowski1/Product-Serial
 * Description: Product with serial numbers for woocommerce
-* Version: 0.1
+* Version: 0.1.0
 * Author: vaisor
 * Author URI: https://github.com/mbugowski1
 **/
