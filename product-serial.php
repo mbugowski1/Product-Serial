@@ -1,11 +1,11 @@
 <?php
 /**
 * Plugin Name: product-serial
-* Plugin URI: https://www.your-site.com/
+* Plugin URI: https://github.com/mbugowski1/Product-Serial
 * Description: Product with serial numbers for woocommerce
 * Version: 0.1
-* Author: Vaisor
-* Author URI: https://www.your-site.com/
+* Author: vaisor
+* Author URI: https://github.com/mbugowski1
 **/
  
 if ( !defined( 'ABSPATH' ) ) {
