@@ -1,6 +1,6 @@
 <?php
 /**
-* Plugin Name: product-serial
+* Plugin Name: Product Serial
 * Plugin URI: https://github.com/mbugowski1/Product-Serial
 * Description: Product with serial numbers for woocommerce
 * Version: 0.1
@@ -54,7 +54,6 @@ class Product_Serial {
 		}
 	}
 	public function save_serial_number_to_order_item( $item, $cart_item_key, $values, $order ) {
-		error_log(print_r($values, true));
 		$product_id = $values['product_id'];
 		$serial_number = get_post_meta($product_id, '_serial_number', true);
 		if ( !empty( $serial_number ) ) {
