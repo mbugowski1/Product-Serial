@@ -3,7 +3,7 @@
 * Plugin Name: Product Serial
 * Plugin URI: https://github.com/mbugowski1/Product-Serial
 * Description: Product with serial numbers for woocommerce
-* Version: 0.1.0
+* Version: 0.1.1
 * Author: vaisor
 * Author URI: https://github.com/mbugowski1
 **/
@@ -59,10 +59,12 @@ class Product_Serial {
 		if ( !empty( $serial_number ) ) {
 			$order_item_from = $values['wcrp_rental_products_rent_from'];
 			$order_item_to = $values['wcrp_rental_products_rent_to'];
-			$item->update_meta_data( '_serial_number', $this->available_serial_numbers($serial_number, $order_item_from, $order_item_to )[0] );
+			$return_threshold = $values['wcrp_rental_products_return_days_threshold'];
+			
+			$item->update_meta_data( '_serial_number', $this->available_serial_numbers($serial_number, $order_item_from, $order_item_to, $return_threshold )[0] );
 		}
 	}
-	private function occupied_serial_numbers($order_from, $order_to) {
+	private function occupied_serial_numbers($order_from, $order_to, $return_threshold) {
 		$args = array(
 			'post_type'  => 'shop_order',
 			'post_status' => 'wc-processing', // Status 'w trakcie realizacji'
@@ -79,6 +81,14 @@ class Product_Serial {
 					$used_serial_number = $item->get_meta('_serial_number');
 					$order_item_from = wc_get_order_item_meta( $item_id, 'wcrp_rental_products_rent_from', true );
 					$order_item_to = wc_get_order_item_meta( $item_id, 'wcrp_rental_products_rent_to', true );
+					
+					//Add return threshold
+					$days_to_add = intval($return_threshold);
+					$date = new DateTime($order_item_to);
+					$date->add(new DateInterval('P' . $days_to_add . 'D'));
+					$order_item_to = $date->format('Y-m-d');
+
+					error_log('Od ' . $order_item_from . " Do " . $order_item_to);
 
 					if (empty ($used_serial_number) || empty ($order_item_from) || empty ($order_item_to))
 						continue;
@@ -89,10 +99,10 @@ class Product_Serial {
 		}
 		return $occupied;
 	}
-	private function available_serial_numbers($serial_number, $order_from, $order_to) {
+	private function available_serial_numbers($serial_number, $order_from, $order_to, $return_threshold) {
 		$serials = str_replace(' ', '', $serial_number);
 		$serials = explode('|', $serials);
-		$occupied = $this->occupied_serial_numbers($order_from, $order_to);
+		$occupied = $this->occupied_serial_numbers($order_from, $order_to, $return_threshold);
 		$available = array_diff($serials, $occupied);
 		$available = array_values($available);
 		return $available;
