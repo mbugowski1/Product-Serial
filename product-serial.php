@@ -3,7 +3,7 @@
 * Plugin Name: Product Serial
 * Plugin URI: https://github.com/mbugowski1/Product-Serial
 * Description: Product with serial numbers for woocommerce
-* Version: 0.1.2
+* Version: 0.2.0
 * Author: vaisor
 * Author URI: https://github.com/mbugowski1
 **/
@@ -22,6 +22,8 @@ class Product_Serial {
 		add_action( 'woocommerce_admin_process_product_object', array( $this, 'product_data_save'), 10, 1 );
 		add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'save_serial_number_to_order_item' ), 11, 4);
 		add_action( 'woocommerce_before_save_order_item', array($this, 'update_serial_number_to_order_item'), 10, 1 );
+		add_action( 'woocommerce_before_order_itemmeta', array($this, 'my_custom_combobox_in_order_item'), 10, 3 );
+		add_action('woocommerce_before_order_object_save', array($this,'my_custom_function_before_order_save'), 10, 1);
 	}
 	public function product_data_tabs($tabs) {
 		$tabs['serial'] = array(
@@ -66,7 +68,7 @@ class Product_Serial {
 		}
 	}
 	public function update_serial_number_to_order_item( $item ) {
-		error_log("Wywolanie uwaga");
+		if ( !is_a( $item, 'WC_Order_Item_Product' ) ) return;
 		if($item->meta_exists("_serial_number")) return;
 		$product_id = $item->get_product_id();
 		if( empty($product_id) ) return;
@@ -79,7 +81,18 @@ class Product_Serial {
 			$item->update_meta_data( '_serial_number', $this->available_serial_numbers($serial_number, $order_item_from, $order_item_to, $return_threshold )[0] );
 		}
 	}
-	
+	public function my_custom_function_before_order_save($order) {
+		foreach ($order->get_items() as $item_id => $item) {
+			$serial_number = $item->get_meta('_serial_number');
+			if ( empty( $serial_number ) ) continue;
+			if (!isset($_POST['serial_number_combo'][$item_id])) continue;
+
+			$serial_number_choose = $_POST['serial_number_combo'][$item_id];
+			error_log(print_r($serial_number_choose, true));
+			if($serial_number_choose == $serial_number) continue;
+			$item->update_meta_data( '_serial_number', $serial_number_choose );
+		}
+	}
 
 	private function occupied_serial_numbers($order_from, $order_to, $return_threshold) {
 		$args = array(
@@ -105,8 +118,6 @@ class Product_Serial {
 					$date->add(new DateInterval('P' . $days_to_add . 'D'));
 					$order_item_to = $date->format('Y-m-d');
 
-					error_log('Od ' . $order_item_from . " Do " . $order_item_to);
-
 					if (empty ($used_serial_number) || empty ($order_item_from) || empty ($order_item_to))
 						continue;
 					if(($order_item_from <= $order_to) && ($order_item_to >= $order_from))
@@ -115,6 +126,26 @@ class Product_Serial {
 			}
 		}
 		return $occupied;
+	}
+	public function my_custom_combobox_in_order_item( $item_id, $item, $product ) {
+		if ( !is_a( $item, 'WC_Order_Item_Product' ) ) return;
+		$product_id = $item->get_product_id();
+		$serial_numbers = get_post_meta($product_id, '_serial_number', true);
+		if ( empty( $serial_numbers ) ) return;
+		$selected_value = $item->get_meta('_serial_number');
+
+		$options = $this->available_serial_numbers($serial_numbers, $item->get_meta('wcrp_rental_products_rent_from'), $item->get_meta('wcrp_rental_products_rent_to'), $item->get_meta('wcrp_rental_products_return_days_threshold'));
+		if(isset($selected_value) && $selected_value != '')
+			$options[] = $selected_value;
+
+		echo '<p><strong>Wybierz opcję:</strong><br>';
+		echo '<select name="serial_number_combo[' . $item_id . ']">';
+		
+		foreach ( $options as $key => $label ) {
+			echo '<option value="' . esc_attr( $label ) . '" ' . (function() use ($label, $selected_value){if($label == $selected_value) return 'selected="selected"'; else return '';})() . '>' . esc_html( $label ) . '</option>';
+		}
+
+		echo '</select></p>';
 	}
 	private function available_serial_numbers($serial_number, $order_from, $order_to, $return_threshold) {
 		$serials = str_replace(' ', '', $serial_number);
