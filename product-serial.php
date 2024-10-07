@@ -3,7 +3,7 @@
 * Plugin Name: Product Serial
 * Plugin URI: https://github.com/mbugowski1/Product-Serial
 * Description: Product with serial numbers for woocommerce
-* Version: 0.1.1
+* Version: 0.1.2
 * Author: vaisor
 * Author URI: https://github.com/mbugowski1
 **/
@@ -17,10 +17,11 @@ if ( !class_exists( 'Product_Serial' ) ) exit;
 
 class Product_Serial {
 	public function __construct() {
-		add_filter('woocommerce_product_data_tabs', array($this, 'product_data_tabs'));
+		add_filter( 'woocommerce_product_data_tabs', array($this, 'product_data_tabs'));
 		add_filter( 'woocommerce_product_data_panels', array( $this, 'product_data_panel' ) );
 		add_action( 'woocommerce_admin_process_product_object', array( $this, 'product_data_save'), 10, 1 );
-		add_action('woocommerce_checkout_create_order_line_item', array( $this, 'save_serial_number_to_order_item' ), 11, 4);
+		add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'save_serial_number_to_order_item' ), 11, 4);
+		add_action( 'woocommerce_before_save_order_item', array($this, 'update_serial_number_to_order_item'), 10, 1 );
 	}
 	public function product_data_tabs($tabs) {
 		$tabs['serial'] = array(
@@ -64,6 +65,22 @@ class Product_Serial {
 			$item->update_meta_data( '_serial_number', $this->available_serial_numbers($serial_number, $order_item_from, $order_item_to, $return_threshold )[0] );
 		}
 	}
+	public function update_serial_number_to_order_item( $item ) {
+		error_log("Wywolanie uwaga");
+		if($item->meta_exists("_serial_number")) return;
+		$product_id = $item->get_product_id();
+		if( empty($product_id) ) return;
+		$serial_number = get_post_meta($product_id, '_serial_number', true);
+		if ( !empty( $serial_number ) ) {
+			$order_item_from = $item->get_meta('wcrp_rental_products_rent_from');
+			$order_item_to = $item->get_meta('wcrp_rental_products_rent_to');
+			$return_threshold = $item->get_meta('wcrp_rental_products_return_days_threshold');
+			
+			$item->update_meta_data( '_serial_number', $this->available_serial_numbers($serial_number, $order_item_from, $order_item_to, $return_threshold )[0] );
+		}
+	}
+	
+
 	private function occupied_serial_numbers($order_from, $order_to, $return_threshold) {
 		$args = array(
 			'post_type'  => 'shop_order',
